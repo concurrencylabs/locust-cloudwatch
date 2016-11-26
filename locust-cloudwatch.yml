@@ -1,0 +1,223 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template for launching a Locust load generator and Concurrency
+  Labs CloudWatch Connector module. This template creates an IAM role and an EC2 instance profile,
+  so the Locust EC2 instance can call CloudWatch APIs. This template does not create CloudWatch Logs
+  log groups or log streams, since the CloudWatch Connector module creates them.
+Mappings:
+  RegionMap:
+    us-east-1:
+      #Find the latest image using: aws ec2 describe-images, for example:
+      #aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn-ami-hvm-2016.09.0.20160923-x86_64-gp2" --region us-east-1
+      AMI: ami-c481fad3
+Outputs:
+  LocustServerInstanceId:
+    Description: The instance ID of the Locust server
+    Value:
+      Ref: LocustServer
+  PublicIP:
+    Description: Public IP address of the Locust server
+    Value:
+      Fn::GetAtt:
+      - LocustServer
+      - PublicIp
+Parameters:
+  KeyName:
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the Locust instances
+    Type: AWS::EC2::KeyPair::KeyName
+Resources:
+  LocustServer:
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          install_all:
+          - install_cfn
+          - install_packages
+        install_cfn:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content:
+                Fn::Join:
+                - ''
+                - - '[main]
+
+                    '
+                  - stack=
+                  - Ref: AWS::StackId
+                  - '
+
+                    '
+                  - region=
+                  - Ref: AWS::Region
+                  - '
+
+                    '
+              group: root
+              mode: '000400'
+              owner: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content:
+                Fn::Join:
+                - ''
+                - - '[cfn-auto-reloader-hook]
+
+                    '
+                  - 'triggers=post.update
+
+                    '
+                  - 'path=Resources.LocustServer.Metadata.AWS::CloudFormation::Init
+
+                    '
+                  - 'action=/opt/aws/bin/cfn-init -v '
+                  - '         --stack '
+                  - Ref: AWS::StackName
+                  - '         --resource LocustServer '
+                  - '         --configsets install_all '
+                  - '         --region '
+                  - Ref: AWS::Region
+                  - '
+
+                    '
+                  - 'runas=root
+
+                    '
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                - /etc/cfn/cfn-hup.conf
+                - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        install_packages:
+          packages:
+            yum:
+              gcc: []
+              gcc-c++ : []
+          commands:
+            install_locust:
+              command: "pip install locustio"
+            install_pyzmq:
+              command: "pip install pyzmq"
+            install_boto3:
+              command: "pip install boto3"
+      Comment: Install CloudFormation and Locust
+    Properties:
+      IamInstanceProfile:
+        Ref: LocustCWConnectorInstanceProfile
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - Ref: AWS::Region
+        - AMI
+      InstanceType: t2.nano
+      KeyName:
+        Ref: KeyName
+      SecurityGroups:
+      - Ref: LocustServerSecurityGroup
+      Tags:
+      - Key: Name
+        Value: locust-server
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - '#!/bin/bash -xe
+
+              '
+            - 'yum update -y aws-cfn-bootstrap
+
+              '
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - Ref: AWS::StackName
+            - '         --resource LocustServer '
+            - '         --configsets install_all '
+            - '         --region '
+            - Ref: AWS::Region
+            - '
+
+              '
+            - '# Get the sample Locust files
+
+              '
+            - 'mkdir -p /home/ec2-user/locust
+
+              '
+            - 'wget http://concurrencylabs-cfn-templates.s3.amazonaws.com/locust-cloudwatch/locustfile.py -O /home/ec2-user/locust/locustfile.py
+
+              '
+            - 'wget http://concurrencylabs-cfn-templates.s3.amazonaws.com/locust-cloudwatch/locust_cw.py -O /home/ec2-user/locust/locust_cw.py
+
+              '
+            - 'chown ec2-user:ec2-user /home/ec2-user/locust
+
+              '
+            - 'chown ec2-user:ec2-user /home/ec2-user/locust/locustfile.py
+
+              '
+            - 'chown ec2-user:ec2-user /home/ec2-user/locust/locust_cw.py
+
+              '
+            - '/opt/aws/bin/cfn-signal -e $? '
+            - '         --stack '
+            - Ref: AWS::StackName
+            - '         --resource LocustServer '
+            - '         --region '
+            - Ref: AWS::Region
+            - '
+
+              '
+    Type: AWS::EC2::Instance
+  LocustServerSecurityGroup:
+    Properties:
+      GroupDescription: Enable HTTP access via port 8089 and SSH access via port 22
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '8089'
+      - CidrIp: 0.0.0.0/0
+        FromPort: '22'
+        IpProtocol: tcp
+        ToPort: '22'
+    Type: AWS::EC2::SecurityGroup
+  LogRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:Create*
+            - logs:Describe*
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+            - arn:aws:logs:*:*:*
+          - Action:
+            - cloudwatch:PutMetricData*
+            Effect: Allow
+            Resource:
+            - '*'
+          Version: '2012-10-17'
+        PolicyName: LocustCwConnectorRolePolicy
+    Type: AWS::IAM::Role
+  LocustCWConnectorInstanceProfile:
+    Properties:
+      Path: /
+      Roles:
+      - Ref: LogRole
+    Type: AWS::IAM::InstanceProfile
