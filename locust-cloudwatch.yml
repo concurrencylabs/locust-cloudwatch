@@ -147,10 +147,10 @@ Resources:
             - 'mkdir -p /home/ec2-user/locust
 
               '
-            - 'wget http://concurrencylabs-cfn-templates.s3.amazonaws.com/locust-cloudwatch/locustfile.py -O /home/ec2-user/locust/locustfile.py
+            - 'wget https://raw.githubusercontent.com/ConcurrenyLabs/locust-cloudwatch/master/locustfile.py -O /home/ec2-user/locust/locustfile.py
 
               '
-            - 'wget http://concurrencylabs-cfn-templates.s3.amazonaws.com/locust-cloudwatch/locust_cw.py -O /home/ec2-user/locust/locust_cw.py
+            - 'wget https://raw.githubusercontent.com/ConcurrenyLabs/locust-cloudwatch/master/locust_cw.py -O /home/ec2-user/locust/locust_cw.py
 
               '
             - 'chown ec2-user:ec2-user /home/ec2-user/locust

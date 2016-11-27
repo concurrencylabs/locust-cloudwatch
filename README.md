@@ -18,15 +18,22 @@ A t2.nano is usually enough to generate some decent load, but you can always mod
 to use a different instance type.
 
 
-<a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=LocustCloudwatchConnector&templateURL=http://s3.amazonaws.com/concurrencylabs-cfn-templates/locust-cw-connector/locust-cloudwatch.yml" target="new"><img src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Launch Stack"></a> 
+<a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=LocustCloudwatchConnector&templateURL=http://s3.amazonaws.com/concurrencylabs-cfn-templates/locust-cloudwatch/locust-cloudwatch.yml" target="new"><img src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Launch Stack"></a> 
 
 
 
 ### Launching a test
 
-I left setting the AWS region out of the code, on purpose. So first, set the AWS region as an environment variable:
+Login to the EC2 instance launched in the CloudFormation template. You can see its public IP
+either in the EC2 console, or in the Outputs tab in the CloudFormation console.
 
-```export AWS_DEFAULT_REGION=<us-east-1|us-west-2|etc.```
+ssh -i <location of your EC2 keys> ec2-user@<public IP of Locust instance>
+
+Go to the ```~/locust``` folder.
+
+I left the AWS region out of the code, on purpose. Therefore you have to first set the AWS region as an environment variable:
+
+```export AWS_DEFAULT_REGION=<us-east-1|us-west-2|etc.>```
 
 
 Typically, you would launch Locust tests with the following command:
@@ -44,8 +51,6 @@ python locust_cw.py --host=http://<URL to test> -f <yourlocustfile.py>
 You'll be able to use all supported Locust command line options.
 
 
-
-
 ### The locust_cw.py module
 
 The ```locust_cw.py``` module implements Locust event hooks and some utility methods that call AWS
@@ -61,6 +66,7 @@ Feel free to update them as you see fit.
 
 I also implemented this module so I wouldn't have to update any core locust components.
 
-
-
+The ```locust_cw.py``` module  calls CloudWatch APIs. The CloudWatch template creates an IAM
+Role and EC2 Instance Profile for this purpose, so you don't have to configure permissions
+manually or store AWS keys in the Locust EC2 instance.
 
