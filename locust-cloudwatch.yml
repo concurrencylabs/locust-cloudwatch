@@ -21,6 +21,16 @@ Outputs:
       - LocustServer
       - PublicIp
 Parameters:
+  InstanceTypeParameter: 
+    Type: String
+    Default: t2.micro
+    AllowedValues: 
+      - t2.micro
+      - t2.medium
+      - t2.large
+      - m4.large      
+    Description: Select an EC2 instance type
+
   KeyName:
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
     Description: Name of an existing EC2 KeyPair to enable SSH access to the Locust instances
@@ -113,7 +123,8 @@ Resources:
         - RegionMap
         - Ref: AWS::Region
         - AMI
-      InstanceType: t2.nano
+      InstanceType: 
+        Ref: InstanceTypeParameter
       KeyName:
         Ref: KeyName
       SecurityGroups:

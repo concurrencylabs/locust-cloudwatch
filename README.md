@@ -70,3 +70,16 @@ The ```locust_cw.py``` module  calls CloudWatch APIs. The CloudWatch template cr
 Role and EC2 Instance Profile for this purpose, so you don't have to configure permissions
 manually or store AWS keys in the Locust EC2 instance.
 
+
+### Security Groups
+
+The CloudFormation template creates a Security Group that is open for port 8089 (the port
+used by the Locust web interface). I strongly recommend you restrict access to this port
+based on your workstation's IP, or your VPN.
+
+
+
+
+
+
+
