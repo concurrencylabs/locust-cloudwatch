@@ -4,6 +4,13 @@
 This repo contains code and a CloudFormation template to publish <a href="http://locust.io/" target="new">Locust</a> test result metrics
 to AWS CloudWatch.
 
+It will allow you to see something like this in a CloudWatch dashboard:
+
+![Locust CW metrics](https://www.concurrencylabs.com/img/posts/14-locust-cw-connector/locust-metrics-20.png")
+
+Which is very useful, since you can have load test results metrics in the same place as AWS system metrics
+(i.e. EC2 CPUUtilization, NetworkIn, etc.), which will make it much easier to analyze load test results.
+
 For more details, <a href="https://www.concurrencylabs.com/blog/how-to-export-locust-metrics-to-cloudwatch/" target="new">read this article</a>.
 
 

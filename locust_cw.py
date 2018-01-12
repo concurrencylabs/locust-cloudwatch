@@ -105,6 +105,7 @@ class RequestResult(object):
         return result
 
 
+    #returns seconds since epoch
     def get_seconds(self):
         epoch = datetime.datetime.utcfromtimestamp(0)
         return int((self.timestamp - epoch).total_seconds())
