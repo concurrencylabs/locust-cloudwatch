@@ -4,7 +4,7 @@ import time, datetime, logging, boto3, os, sys, json
 from locust import HttpLocust, TaskSet, task, events, web, main
 from Queue import Queue
 
-log = logging.getLogger()
+logging.basicConfig(level=logging.INFO)
 
 
 #_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
@@ -182,7 +182,7 @@ class CloudWatchConnector(object):
     #TODO: if using roleArn, find a way to refresh the clients every 59 minutes (before the max duration of temp credentials expires)
     def init_clients(self):
         if self.iamrolearn:
-            log.info("Initializing AWS SDK clients using IAM Role:[{}]".format(self.iamrolearn))
+            logging.info("Initializing AWS SDK clients using IAM Role:[{}]".format(self.iamrolearn))
             stsclient = boto3.client('sts')
             stsresponse = stsclient.assume_role(RoleArn=self.iamrolearn, RoleSessionName='cwlocustconnector')
             if 'Credentials' in stsresponse:
@@ -205,7 +205,7 @@ class CloudWatchConnector(object):
         """
         Event handler that get triggered when start hatching
         """
-        log.info("Started hatching [{}]".format(kwargs))
+        logging.info("Started hatching [{}]".format(kwargs))
 
     def on_request_success(self, request_type, name, response_time, response_length, **kwargs):
         request_result = RequestResult(self.host, request_type, name, response_time, response_length, "", STATUS_SUCCESS)
@@ -280,14 +280,14 @@ class CloudWatchConnector(object):
                         )
                     if 'nextSequenceToken' in response: self.nexttoken = response['nextSequenceToken']
                 except Exception as e:
-                    log.error(str(e))
+                    logging.error(str(e))
 
             if cw_metrics_batch:
                 try:
                     cwresponse = self.cwclient.put_metric_data(Namespace=self.namespace,MetricData=cw_metrics_batch)
-                    log.debug("PutMetricData response: [{}]".format(json.dumps(cwresponse, indent=4)))
+                    logging.debug("PutMetricData response: [{}]".format(json.dumps(cwresponse, indent=4)))
                 except Exception as e:
-                    log.error(str(e))
+                    logging.error(str(e))
 
 
     """
@@ -308,7 +308,7 @@ class CloudWatchConnector(object):
                 if self.usercount: cw_metrics_batch.append(self.usercount.get_metric_data())
 
                 self.response_queue.task_done()
-            log.debug("Queue size:["+str(self.response_queue.qsize())+"]")
+            logging.debug("Queue size:["+str(self.response_queue.qsize())+"]")
         result['cw_logs_batch']=cw_logs_batch
         result['cw_metrics_batch']=cw_metrics_batch
         return result
