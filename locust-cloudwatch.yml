@@ -109,11 +109,17 @@ Resources:
               gcc-c++ : []
           commands:
             install_locust:
-              command: "pip install locustio"
+              command: "/usr/local/bin/pip install locustio"
             install_pyzmq:
-              command: "pip install pyzmq"
+              command: "/usr/local/bin/pip install pyzmq"
             install_boto3:
-              command: "pip install boto3"
+              command: "/usr/local/bin/pip install boto3"
+            c_upgrade_pip:
+              command: "pip install --upgrade pip"
+            b_remove_that:
+              command: "rm -r /usr/lib/python2.7/dist-packages/chardet"
+            a_remove_this:
+              command: "rm /usr/lib/python2.7/dist-packages/chardet-2.0.1.egg-info"
       Comment: Install CloudFormation and Locust
     Properties:
       IamInstanceProfile:
