@@ -7,8 +7,8 @@ Mappings:
   RegionMap:
     us-east-1:
       #Find the latest image using: aws ec2 describe-images, for example:
-      #aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn-ami-hvm-2016.09.0.20160923-x86_64-gp2" --region us-east-1
-      AMI: ami-c481fad3
+      #aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn-ami-hvm-2018.03.0.20180811-x86_64-gp2" --region us-east-1
+      AMI: ami-0ff8a91507f77f867
 Outputs:
   LocustServerInstanceId:
     Description: The instance ID of the Locust server
