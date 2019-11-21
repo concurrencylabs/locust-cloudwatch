@@ -1,2 +1,4 @@
 locustio
 pyzmq
+pytz
+boto3

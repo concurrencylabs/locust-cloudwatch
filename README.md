@@ -34,9 +34,13 @@ to use a different instance type.
 Login to the EC2 instance launched in the CloudFormation template. You can see its public IP
 either in the EC2 console, or in the Outputs tab in the CloudFormation console.
 
-ssh -i <location of your EC2 keys> ec2-user@<public IP of Locust instance>
+`ssh -i <location of your EC2 keys> ec2-user@<public IP of Locust instance>`
 
-Go to the ```~/locust``` folder.
+* Go to the ```~/locust``` folder.
+* Create a Python3 virtualenv: `virtualenv -p python3 .`
+* Activate the virtualenv: `source bin/activate`
+* Install requirements in the virtualenv: `pip install -r requirements.txt`
+
 
 I left the AWS region out of the code, on purpose. Therefore you have to first set the AWS region as an environment variable:
 

@@ -8,7 +8,7 @@ Mappings:
     us-east-1:
       #Find the latest image using: aws ec2 describe-images, for example:
       #aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn-ami-hvm-2018.03.0.20180811-x86_64-gp2" --region us-east-1
-      AMI: ami-0ff8a91507f77f867
+      AMI: ami-00eb20669e0990cb4
 Outputs:
   LocustServerInstanceId:
     Description: The instance ID of the Locust server
@@ -105,6 +105,7 @@ Resources:
         install_packages:
           packages:
             yum:
+              python36: []
               gcc: []
               gcc-c++ : []
           commands:
@@ -164,6 +165,9 @@ Resources:
             - 'wget https://raw.githubusercontent.com/ConcurrenyLabs/locust-cloudwatch/master/locust_cw.py -O /home/ec2-user/locust/locust_cw.py
 
               '
+            - 'wget https://raw.githubusercontent.com/ConcurrenyLabs/locust-cloudwatch/master/requirements.txt -O /home/ec2-user/locust/requirements.txt
+
+              '              
             - 'chown ec2-user:ec2-user /home/ec2-user/locust
 
               '
@@ -173,6 +177,9 @@ Resources:
             - 'chown ec2-user:ec2-user /home/ec2-user/locust/locust_cw.py
 
               '
+            - 'chown ec2-user:ec2-user /home/ec2-user/locust/requirements.txt
+
+              '              
             - '/opt/aws/bin/cfn-signal -e $? '
             - '         --stack '
             - Ref: AWS::StackName

@@ -1,10 +1,10 @@
 # encoding: utf-8
 
-import time, datetime, logging, boto3, os, sys, json
 from locust import HttpLocust, TaskSet, task, events, web, main
-from Queue import Queue
+import time, datetime, logging, boto3, os, sys, json  #moved this line AFTER locust imports - https://github.com/gevent/gevent/issues/1016
+import queue
 
-logging.basicConfig(level=logging.INFO)
+log = logging.getLogger()
 
 
 #_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
@@ -14,6 +14,7 @@ CW_LOGS_LOG_GROUP="LocustTests"
 CW_LOGS_LOG_STREAM="load-generator"
 #_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 
+#See https://github.com/concurrencylabs/locust-cloudwatch
 
 STATUS_SUCCESS = "SUCCESS"
 STATUS_FAILURE = "FAILURE"
@@ -105,7 +106,6 @@ class RequestResult(object):
         return result
 
 
-    #returns seconds since epoch
     def get_seconds(self):
         epoch = datetime.datetime.utcfromtimestamp(0)
         return int((self.timestamp - epoch).total_seconds())
@@ -163,7 +163,7 @@ class CloudWatchConnector(object):
         self.logstream = logstream + "_" + str(seq)
         self.namespace = namespace #the same namespace is used for both CW Logs and Metrics
         self.nexttoken = ""
-        self.response_queue = Queue()
+        self.response_queue = queue.Queue()
         self.batch_size = 5
         self.host = host
         self.usercount = None
@@ -183,7 +183,7 @@ class CloudWatchConnector(object):
     #TODO: if using roleArn, find a way to refresh the clients every 59 minutes (before the max duration of temp credentials expires)
     def init_clients(self):
         if self.iamrolearn:
-            logging.info("Initializing AWS SDK clients using IAM Role:[{}]".format(self.iamrolearn))
+            log.info("Initializing AWS SDK clients using IAM Role:[{}]".format(self.iamrolearn))
             stsclient = boto3.client('sts')
             stsresponse = stsclient.assume_role(RoleArn=self.iamrolearn, RoleSessionName='cwlocustconnector')
             if 'Credentials' in stsresponse:
@@ -194,6 +194,7 @@ class CloudWatchConnector(object):
                 self.cwclient = boto3.client('cloudwatch',aws_access_key_id=accessKeyId, aws_secret_access_key=secretAccessKey,aws_session_token=sessionToken)
 
         else:
+            log.info("Initializing AWS SDK clients using configured AWS credentials")
             self.cwlogsclient = boto3.client('logs')
             self.cwclient = boto3.client('cloudwatch')
 
@@ -206,7 +207,7 @@ class CloudWatchConnector(object):
         """
         Event handler that get triggered when start hatching
         """
-        logging.info("Started hatching [{}]".format(kwargs))
+        log.info("Started hatching [{}]".format(kwargs))
 
     def on_request_success(self, request_type, name, response_time, response_length, **kwargs):
         request_result = RequestResult(self.host, request_type, name, response_time, response_length, "", STATUS_SUCCESS)
@@ -281,14 +282,14 @@ class CloudWatchConnector(object):
                         )
                     if 'nextSequenceToken' in response: self.nexttoken = response['nextSequenceToken']
                 except Exception as e:
-                    logging.error(str(e))
+                    log.error(str(e))
 
             if cw_metrics_batch:
                 try:
                     cwresponse = self.cwclient.put_metric_data(Namespace=self.namespace,MetricData=cw_metrics_batch)
-                    logging.debug("PutMetricData response: [{}]".format(json.dumps(cwresponse, indent=4)))
+                    log.debug("PutMetricData response: [{}]".format(json.dumps(cwresponse, indent=4)))
                 except Exception as e:
-                    logging.error(str(e))
+                    log.error(str(e))
 
 
     """
@@ -309,7 +310,7 @@ class CloudWatchConnector(object):
                 if self.usercount: cw_metrics_batch.append(self.usercount.get_metric_data())
 
                 self.response_queue.task_done()
-            logging.debug("Queue size:["+str(self.response_queue.qsize())+"]")
+            log.debug("Queue size:["+str(self.response_queue.qsize())+"]")
         result['cw_logs_batch']=cw_logs_batch
         result['cw_metrics_batch']=cw_metrics_batch
         return result
@@ -317,7 +318,8 @@ class CloudWatchConnector(object):
 
 if __name__ == "__main__":
 
-   parser, options, arguments = main.parse_options()
+   #parser, options, arguments = main.parse_options()
+   parser, options = main.parse_options()
 
    host = ''
    if options.host:
