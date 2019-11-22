@@ -159,13 +159,13 @@ Resources:
             - 'mkdir -p /home/ec2-user/locust
 
               '
-            - 'wget https://raw.githubusercontent.com/ConcurrenyLabs/locust-cloudwatch/master/locustfile.py -O /home/ec2-user/locust/locustfile.py
+            - 'wget https://raw.githubusercontent.com/concurrencylabs/locust-cloudwatch/master/locustfile.py -O /home/ec2-user/locust/locustfile.py
 
               '
-            - 'wget https://raw.githubusercontent.com/ConcurrenyLabs/locust-cloudwatch/master/locust_cw.py -O /home/ec2-user/locust/locust_cw.py
+            - 'wget https://raw.githubusercontent.com/concurrencylabs/locust-cloudwatch/master/locust_cw.py -O /home/ec2-user/locust/locust_cw.py
 
               '
-            - 'wget https://raw.githubusercontent.com/ConcurrenyLabs/locust-cloudwatch/master/requirements.txt -O /home/ec2-user/locust/requirements.txt
+            - 'wget https://raw.githubusercontent.com/concurrencylabs/locust-cloudwatch/master/requirements.txt -O /home/ec2-user/locust/requirements.txt
 
               '              
             - 'chown ec2-user:ec2-user /home/ec2-user/locust
